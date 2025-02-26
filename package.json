@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/KingJorjai/dbus-bot#readme",
   "dependencies": {
+    "axios": "^1.8.1",
     "discord.js": "^14.18.0"
   },
   "devDependencies": {
