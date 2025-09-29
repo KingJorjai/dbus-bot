@@ -2,6 +2,8 @@
  * Custom error classes for better error handling
  */
 
+const Logger = require('./logger');
+
 class APIError extends Error {
 	constructor(message, statusCode = 500, originalError = null) {
 		super(message);
@@ -37,14 +39,10 @@ class ErrorHandler {
 	 * @param {string} context - Context where the error occurred
 	 */
 	static handle(error, context = 'Unknown') {
-		console.error(`[${context}] ${error.name}: ${error.message}`);
+		Logger.error(error, context);
 
 		if (error.originalError) {
-			console.error('Original error:', error.originalError);
-		}
-
-		if (error.stack) {
-			console.error('Stack trace:', error.stack);
+			Logger.error(`Original error: ${error.originalError}`, context);
 		}
 	}
 

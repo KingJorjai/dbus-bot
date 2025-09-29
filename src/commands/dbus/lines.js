@@ -4,6 +4,7 @@ const { LINES_PER_PAGE, COLORS } = require('../../config/constants');
 const ResponseHelper = require('../../helpers/responseHelper');
 const PaginationHelper = require('../../helpers/paginationHelper');
 const { ErrorHandler } = require('../../utils/errorHandler');
+const Logger = require('../../utils/logger');
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -93,7 +94,7 @@ module.exports = {
 				await ResponseHelper.sendError(interaction, errorMessage);
 			}
 			catch (responseError) {
-				console.error('Failed to send error response:', responseError.message);
+				Logger.error(`Failed to send error response: ${responseError.message}`, 'LINES');
 			}
 		}
 	},

@@ -4,6 +4,7 @@ const { Client, Collection, Events, GatewayIntentBits } = require('discord.js');
 const { token } = require('../config.json');
 const { ErrorHandler } = require('./utils/errorHandler');
 const ResponseHelper = require('./helpers/responseHelper');
+const Logger = require('./utils/logger');
 
 /**
  * Discord Bot Client Setup
@@ -34,10 +35,10 @@ class DiscordBot {
 
 				if ('data' in command && 'execute' in command) {
 					this.client.commands.set(command.data.name, command);
-					console.log(`✓ Loaded command: ${command.data.name}`);
+					Logger.info(`Loaded command: ${command.data.name}`, 'LOAD');
 				}
 				else {
-					console.log(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`);
+					Logger.warn(`The command at ${filePath} is missing a required "data" or "execute" property.`, 'LOAD');
 				}
 			}
 		}
@@ -49,8 +50,8 @@ class DiscordBot {
 	setupEventHandlers() {
 		// Ready event
 		this.client.once(Events.ClientReady, readyClient => {
-			console.log(`🤖 Bot ready! Logged in as ${readyClient.user.tag}`);
-			console.log(`📊 Loaded ${this.client.commands.size} commands`);
+			Logger.bot('Bot ready', `Logged in as ${readyClient.user.tag}`);
+			Logger.info(`Loaded ${this.client.commands.size} commands`, 'LOAD');
 		});
 
 		// Interaction event
@@ -64,7 +65,7 @@ class DiscordBot {
 		});
 
 		this.client.on('warn', info => {
-			console.warn('Discord Client Warning:', info);
+			Logger.warn(`Discord Client Warning: ${info}`, 'DISC');
 		});
 	}
 
@@ -78,12 +79,12 @@ class DiscordBot {
 		const command = this.client.commands.get(interaction.commandName);
 
 		if (!command) {
-			console.error(`❌ No command matching ${interaction.commandName} was found.`);
+			Logger.error(`No command matching ${interaction.commandName} was found`, 'CMD');
 			return;
 		}
 
 		try {
-			console.log(`🔧 Executing command: ${interaction.commandName} by ${interaction.user.tag}`);
+			Logger.command(interaction.commandName, interaction.user.tag);
 			await command.execute(interaction);
 		}
 		catch (error) {
@@ -94,7 +95,7 @@ class DiscordBot {
 				await ResponseHelper.sendError(interaction, errorMessage);
 			}
 			catch (responseError) {
-				console.error('❌ Failed to send error message:', responseError.message);
+				Logger.error(`Failed to send error message: ${responseError.message}`, 'RESP');
 			}
 		}
 	}
@@ -116,7 +117,7 @@ class DiscordBot {
 	 * Graceful shutdown
 	 */
 	async shutdown() {
-		console.log('🛑 Shutting down bot...');
+		Logger.bot('Shutting down bot...');
 		await this.client.destroy();
 		process.exit(0);
 	}

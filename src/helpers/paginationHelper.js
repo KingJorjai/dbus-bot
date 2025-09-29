@@ -1,4 +1,5 @@
 const { ActionRowBuilder, ButtonBuilder } = require('discord.js');
+const Logger = require('../utils/logger');
 
 /**
  * Utility class for creating pagination components
@@ -69,9 +70,10 @@ class PaginationHelper {
 			}
 		}
 		catch (error) {
-			console.error('Could not remove buttons:', error.message);
+			Logger.error(`Could not remove buttons: ${error.message}`, 'PAGINATION');
 		}
 	}
 }
 
+module.exports = PaginationHelper;
 module.exports = PaginationHelper;

@@ -3,6 +3,7 @@ const { checkApiHealth } = require('../../utils/api-caller');
 const EmbedHelper = require('../../helpers/embedHelper');
 const ResponseHelper = require('../../helpers/responseHelper');
 const { ErrorHandler } = require('../../utils/errorHandler');
+const Logger = require('../../utils/logger');
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -27,7 +28,7 @@ module.exports = {
 				await ResponseHelper.sendEmbed(interaction, embed, { ephemeral: true });
 			}
 			catch (responseError) {
-				console.error('Failed to send error response:', responseError.message);
+				Logger.error(`Failed to send error response: ${responseError.message}`, 'HEALTH');
 			}
 		}
 	},

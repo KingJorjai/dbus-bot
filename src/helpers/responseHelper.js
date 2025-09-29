@@ -23,7 +23,7 @@ class ResponseHelper {
 			}
 		}
 		catch (error) {
-			console.error('Failed to send interaction response:', error.message);
+			Logger.error(`Failed to send interaction response: ${error.message}`, 'RESPONSE');
 			throw error;
 		}
 	}
@@ -44,7 +44,7 @@ class ResponseHelper {
 			}
 		}
 		catch (error) {
-			console.error('Failed to defer interaction:', error.message);
+			Logger.error(`Failed to defer interaction: ${error.message}`, 'RESPONSE');
 			throw error;
 		}
 	}

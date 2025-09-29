@@ -4,6 +4,7 @@ const EmbedHelper = require('../../helpers/embedHelper');
 const ResponseHelper = require('../../helpers/responseHelper');
 const ValidationHelper = require('../../helpers/validationHelper');
 const { ErrorHandler, ValidationError } = require('../../utils/errorHandler');
+const Logger = require('../../utils/logger');
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -58,7 +59,7 @@ module.exports = {
 				await ResponseHelper.sendError(interaction, errorMessage);
 			}
 			catch (responseError) {
-				console.error('Failed to send error response:', responseError.message);
+				Logger.error(`Failed to send error response: ${responseError.message}`, 'ARRIVAL');
 			}
 		}
 	},
