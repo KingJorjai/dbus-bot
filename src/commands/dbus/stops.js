@@ -1,25 +1,39 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const { getBusLines } = require('../../utils/api-caller');
-const { LINES_PER_PAGE, COLORS } = require('../../config/constants');
+const { getLineStops } = require('../../utils/api-caller');
+const { STOPS_PER_PAGE, COLORS } = require('../../config/constants');
 const ResponseHelper = require('../../helpers/responseHelper');
 const PaginationHelper = require('../../helpers/paginationHelper');
-const { ErrorHandler } = require('../../utils/errorHandler');
+const ValidationHelper = require('../../helpers/validationHelper');
+const { ErrorHandler, ValidationError } = require('../../utils/errorHandler');
 
 module.exports = {
 	data: new SlashCommandBuilder()
-		.setName('lines')
-		.setDescription('Returns the list of bus lines'),
+		.setName('stops')
+		.setDescription('Get all stops for a specific bus line')
+		.addStringOption(option =>
+			option.setName('line')
+				.setDescription('Bus line code (e.g., 26, 05, 41)')
+				.setRequired(true)),
 
 	async execute(interaction) {
 		try {
 			await ResponseHelper.safeDefer(interaction, { ephemeral: true });
 
-			const lines = await getBusLines();
+			const rawLineCode = interaction.options.getString('line');
 
-			if (!lines || lines.length === 0) {
+			// Validate and sanitize input
+			const lineResult = ValidationHelper.processLineCode(rawLineCode);
+
+			if (!lineResult.isValid) {
+				throw new ValidationError(lineResult.error, 'line');
+			}
+
+			const stops = await getLineStops(lineResult.value);
+
+			if (!stops || stops.length === 0) {
 				const embed = new EmbedBuilder()
-					.setTitle('📋 Bus Lines')
-					.setDescription('No bus lines found.')
+					.setTitle(`🚏 Stops for Line ${lineResult.value}`)
+					.setDescription(`No stops found for line ${lineResult.value}.`)
 					.setColor(COLORS.WARNING)
 					.setTimestamp();
 
@@ -28,26 +42,26 @@ module.exports = {
 			}
 
 			let currentPage = 0;
-			const totalPages = Math.ceil(lines.length / LINES_PER_PAGE);
+			const totalPages = Math.ceil(stops.length / STOPS_PER_PAGE);
 
 			const generateEmbed = (page) => {
-				const start = page * LINES_PER_PAGE;
-				const end = start + LINES_PER_PAGE;
-				const currentLines = lines.slice(start, end);
+				const start = page * STOPS_PER_PAGE;
+				const end = start + STOPS_PER_PAGE;
+				const currentStops = stops.slice(start, end);
 
 				const embed = new EmbedBuilder()
-					.setTitle('📋 Available Bus Lines')
-					.setDescription('Here are the available bus lines:')
+					.setTitle(`🚏 Stops for Line ${lineResult.value}`)
+					.setDescription(`Showing stops for bus line ${lineResult.value}`)
 					.setColor(COLORS.INFO)
 					.setFooter({
-						text: `Page ${page + 1} of ${totalPages} | ${lines.length} total lines`,
+						text: `Page ${page + 1} of ${totalPages} | ${stops.length} total stops`,
 					})
 					.setTimestamp();
 
-				currentLines.forEach(line => {
+				currentStops.forEach(stop => {
 					embed.addFields({
-						name: line.code || 'Unknown',
-						value: line.name || 'No name available',
+						name: `Stop ${stop.code || 'Unknown'}`,
+						value: stop.name || 'No name available',
 						inline: true,
 					});
 				});
@@ -85,7 +99,7 @@ module.exports = {
 			}
 		}
 		catch (error) {
-			ErrorHandler.handle(error, 'Lines Command');
+			ErrorHandler.handle(error, 'Stops Command');
 
 			const errorMessage = ErrorHandler.getUserMessage(error);
 

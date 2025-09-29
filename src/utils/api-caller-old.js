@@ -19,7 +19,7 @@ class ApiClient {
 			if (response.data.success && response.data.data !== undefined) {
 				return response.data.data;
 			}
-
+			
 			throw new APIError(`Invalid response format from API during ${operation}`);
 		}
 		catch (error) {
@@ -31,14 +31,14 @@ class ApiClient {
 				throw new APIError(
 					`${operation} failed: ${error.response.data.error.message}`,
 					error.response.status,
-					error,
+					error
 				);
 			}
-
+			
 			throw new APIError(
 				`${operation} failed: ${error.message}`,
 				500,
-				error,
+				error
 			);
 		}
 	}
@@ -57,7 +57,7 @@ class ApiClient {
 					timestamp: response.data.timestamp,
 				};
 			}
-
+			
 			throw new APIError('Invalid response format from API');
 		}
 		catch (error) {
@@ -69,14 +69,14 @@ class ApiClient {
 				throw new APIError(
 					`API health check failed: ${error.response.data.error.message}`,
 					error.response.status,
-					error,
+					error
 				);
 			}
-
+			
 			throw new APIError(
 				`API health check failed: ${error.message}`,
 				500,
-				error,
+				error
 			);
 		}
 	}
@@ -106,10 +106,10 @@ class ApiClient {
 	 */
 	static async getBusTimeAtStop(lineNumber, stopCode) {
 		const data = await this.makeRequest(
-			`${API_BASE_URL}/lines/${lineNumber}/${stopCode}`,
-			`fetch bus time at stop ${stopCode} for line ${lineNumber}`,
+			`${API_BASE_URL}/lines/${lineNumber}/${stopCode}`, 
+			`fetch bus time at stop ${stopCode} for line ${lineNumber}`
 		);
-
+		
 		return data.arrival_time;
 	}
 }
@@ -121,4 +121,63 @@ module.exports = {
 	getBusLines: ApiClient.getBusLines.bind(ApiClient),
 	getLineStops: ApiClient.getLineStops.bind(ApiClient),
 	getBusTimeAtStop: ApiClient.getBusTimeAtStop.bind(ApiClient),
+};
+		}
+		else {
+			throw new Error('Invalid response format from API');
+		}
+	}
+	catch (error) {
+		if (error.response && error.response.data && error.response.data.error) {
+			throw new Error(`Failed to fetch bus lines: ${error.response.data.error.message}`);
+		}
+		throw new Error(`Failed to fetch bus lines: ${error.message}`);
+	}
+}
+
+async function getLineStops(lineCode) {
+	try {
+		const response = await axios.get(`${API_BASE_URL}/lines/${lineCode}`);
+
+		// Check if the response follows the new API structure
+		if (response.data.success && response.data.data) {
+			return response.data.data;
+		}
+		else {
+			throw new Error('Invalid response format from API');
+		}
+	}
+	catch (error) {
+		if (error.response && error.response.data && error.response.data.error) {
+			throw new Error(`Failed to fetch stops for line ${lineCode}: ${error.response.data.error.message}`);
+		}
+		throw new Error(`Failed to fetch stops for line ${lineCode}: ${error.message}`);
+	}
+}
+
+async function getBusTimeAtStop(lineNumber, stopCode) {
+	try {
+		const response = await axios.get(`${API_BASE_URL}/lines/${lineNumber}/${stopCode}`);
+
+		// Check if the response follows the new API structure
+		if (response.data.success && response.data.data) {
+			return response.data.data.arrival_time;
+		}
+		else {
+			throw new Error('Invalid response format from API');
+		}
+	}
+	catch (error) {
+		if (error.response && error.response.data && error.response.data.error) {
+			throw new Error(`Failed to fetch bus time at stop ${stopCode} for line ${lineNumber}: ${error.response.data.error.message}`);
+		}
+		throw new Error(`Failed to fetch bus time at stop ${stopCode} for line ${lineNumber}: ${error.message}`);
+	}
+}
+
+module.exports = {
+	checkApiHealth,
+	getBusLines,
+	getLineStops,
+	getBusTimeAtStop,
 };
